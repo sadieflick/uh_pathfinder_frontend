@@ -19,10 +19,6 @@ uv.lock
 # Project files
 project_docs/
 
-# Data & embeddings
-data/embeddings/
-data/processed/
-data/raw/
 
 # Streamlit / Secrets
 .streamlit/
