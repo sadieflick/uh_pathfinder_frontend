@@ -3,8 +3,9 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { RIASECScores } from "@/pages/Assessment";
+import { computeRiasecCode, submitRiasecCode } from "@/services/assessmentService";
 
-// RIASEC Questions from the uploaded JSON
+// Back up RIASEC Questions from the uploaded JSON if query fails.
 const questions = [
   { index: 1, area: "Realistic", text: "Build kitchen cabinets" },
   { index: 2, area: "Investigative", text: "Develop a new medicine" },
@@ -78,6 +79,23 @@ const RIASECQuiz = ({ onComplete, initialAnswers = {}, onClear }: RIASECQuizProp
     if (currentPage < totalPages - 1) {
       setCurrentPage(currentPage + 1);
     } else {
+      // Compute 3-letter code and send to backend for baseline results
+      try {
+        const code = computeRiasecCode(answers, questions as any);
+        // Persist answers for back/forward navigation
+        sessionStorage.setItem("riasec-code", code);
+        // Fire-and-forget to hydrate downstream results screens
+        // Request more occupations to enrich the jobs map (e.g., 20 instead of 10)
+        submitRiasecCode(code, 20)
+          .then((result) => {
+            sessionStorage.setItem("riasec-result", JSON.stringify(result));
+          })
+          .catch((err) => {
+            console.error("RISEAC submit failed", err);
+          });
+      } catch (e) {
+        console.error("Error computing/submitting RIASEC code", e);
+      }
       onComplete(answers);
     }
   };

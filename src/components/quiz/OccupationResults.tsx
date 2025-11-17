@@ -13,34 +13,85 @@ interface OccupationResultsProps {
 }
 
 const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, onBackToInterests }: OccupationResultsProps) => {
-  // Position data for scattered layout (positions are percentages)
-  // Desktop/tablet positions - avoid center circle (keep clear zone around 50%, 50%)
-  const desktopPositions = [
-    { x: 15, y: 12 },
-    { x: 28, y: 8 },
-    { x: 72, y: 12 },
-    { x: 85, y: 15 },
-    { x: 10, y: 28 },
-    { x: 22, y: 35 },
-    { x: 78, y: 30 },
-    { x: 90, y: 42 },
-    { x: 12, y: 58 },
-    { x: 25, y: 65 },
-    { x: 75, y: 62 },
-    { x: 88, y: 70 },
-    { x: 18, y: 85 },
-    { x: 42, y: 88 },
-    { x: 82, y: 88 },
-  ];
+  // Create 3 orbital rings with staggered positions for 20 occupations
+  // Inner ring: 6 positions at radius 25%
+  // Middle ring: 7 positions at radius 33%
+  // Outer ring: 7 positions at radius 41%
+  const generateOrbitPositions = () => {
+    const positions = [];
+    
+    // Inner orbit - 6 positions, starting offset 0°
+    const innerCount = 6;
+    const innerRadius = 25;
+    for (let i = 0; i < innerCount; i++) {
+      const angle = (i * 360 / innerCount) - 90;
+      const radians = (angle * Math.PI) / 180;
+      positions.push({
+        x: Math.round((50 + innerRadius * Math.cos(radians)) * 10) / 10,
+        y: Math.round((50 + innerRadius * Math.sin(radians)) * 10) / 10
+      });
+    }
+    
+    // Middle orbit - 7 positions, offset by half interval for stagger
+    const middleCount = 7;
+    const middleRadius = 33;
+    const middleOffset = 360 / (middleCount * 2); // Half interval offset
+    for (let i = 0; i < middleCount; i++) {
+      const angle = (i * 360 / middleCount) + middleOffset - 90;
+      const radians = (angle * Math.PI) / 180;
+      positions.push({
+        x: Math.round((50 + middleRadius * Math.cos(radians)) * 10) / 10,
+        y: Math.round((50 + middleRadius * Math.sin(radians)) * 10) / 10
+      });
+    }
+    
+    // Outer orbit - 7 positions, offset differently for more stagger
+    const outerCount = 7;
+    const outerRadius = 41;
+    const outerOffset = 360 / (outerCount * 3); // Different offset
+    for (let i = 0; i < outerCount; i++) {
+      const angle = (i * 360 / outerCount) + outerOffset - 90;
+      const radians = (angle * Math.PI) / 180;
+      positions.push({
+        x: Math.round((50 + outerRadius * Math.cos(radians)) * 10) / 10,
+        y: Math.round((50 + outerRadius * Math.sin(radians)) * 10) / 10
+      });
+    }
+    
+    return positions;
+  };
 
-  // Mobile positions - 5 results evenly spaced around circle
-  const mobilePositions = [
-    { x: 50, y: 5 },   // top
-    { x: 90, y: 35 },  // right-top
-    { x: 75, y: 85 },  // right-bottom
-    { x: 25, y: 85 },  // left-bottom
-    { x: 10, y: 35 },  // left-top
-  ];
+  // Desktop/tablet positions - 20 results in 3 orbits (6 + 7 + 7)
+  const desktopPositions = generateOrbitPositions();
+
+  // Mobile positions - 8 results in 2 orbits (4 inner + 4 outer)
+  const generateMobilePositions = () => {
+    const positions = [];
+    
+    // Inner orbit - 4 positions
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * 90) - 90; // 90° apart
+      const radians = (angle * Math.PI) / 180;
+      positions.push({
+        x: Math.round((50 + 28 * Math.cos(radians)) * 10) / 10,
+        y: Math.round((50 + 28 * Math.sin(radians)) * 10) / 10
+      });
+    }
+    
+    // Outer orbit - 4 positions, offset by 45° for stagger
+    for (let i = 0; i < 4; i++) {
+      const angle = (i * 90) + 45 - 90; // Offset by 45°
+      const radians = (angle * Math.PI) / 180;
+      positions.push({
+        x: Math.round((50 + 38 * Math.cos(radians)) * 10) / 10,
+        y: Math.round((50 + 38 * Math.sin(radians)) * 10) / 10
+      });
+    }
+    
+    return positions;
+  };
+
+  const mobilePositions = generateMobilePositions();
 
   // Color variants for different occupations
   const getColor = (index: number) => {
@@ -195,9 +246,9 @@ const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, on
             })}
           </div>
 
-          {/* Career Dots - Mobile (5 results) */}
+          {/* Career Dots - Mobile (8 results) */}
           <div className="md:hidden">
-            {occupations.slice(0, 5).map((occupation, index) => {
+            {occupations.slice(0, 8).map((occupation, index) => {
               const pos = mobilePositions[index] || { x: 50, y: 50 };
               const color = getColor(index);
 

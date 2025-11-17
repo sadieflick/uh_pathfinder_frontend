@@ -7,6 +7,7 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { OccupationMatch } from "@/pages/Assessment";
+import OccupationPathwayMap from "@/components/OccupationPathwayMap";
 import { 
   ArrowLeft, 
   DollarSign, 
@@ -314,8 +315,27 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
           </div>
         </Card>
 
-        {/* Pathway Map Section */}
+        {/* Education Pathway Map Section */}
         <div className="mb-8">
+          <div className="mb-6 text-center">
+            <div className="flex items-center justify-center gap-3 mb-4">
+              <School className="w-6 h-6 text-primary" />
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">Your Education Pathway</h2>
+            </div>
+            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
+              See how different education paths can lead you to a career as {occupation.title}.
+            </p>
+          </div>
+
+          <OccupationPathwayMap 
+            onetCode={occupation.onetCode}
+            occupationTitle={occupation.title}
+          />
+        </div>
+
+        {/* Pathway Map Section - Legacy mock data preserved for reference */}
+        <div className="mb-8 hidden">
+          {/* This section with mockHawaiiPrograms is preserved but hidden */}
           {/* Legend */}
           <Card className="p-4 mb-6 bg-gradient-to-r from-secondary/20 to-muted/20">
             <div className="flex flex-wrap items-center gap-4 md:gap-6">
@@ -542,17 +562,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
               </div>
             </div>
           </div>
-
-          {/* Your Pathway to Success - moved below */}
-          <div className="mt-12 text-center">
-            <div className="flex items-center justify-center gap-3 mb-4">
-              <School className="w-6 h-6 text-primary" />
-              <h2 className="text-xl md:text-2xl font-bold text-foreground">Your Pathway to Success</h2>
-            </div>
-            <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-              Explore Hawaiʻi training programs organized by duration. Hover over each program to see details.
-            </p>
-          </div>
+          {/* End of hidden legacy section */}
         </div>
       </div>
     </div>
