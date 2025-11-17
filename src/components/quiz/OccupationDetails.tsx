@@ -27,7 +27,7 @@ interface OccupationDetailsProps {
   onBack: () => void;
 }
 
-// Mock Hawaii programs data organized by pathway
+// Mock Hawaii was used for testing
 const mockHawaiiPrograms = {
   training: [
     {
