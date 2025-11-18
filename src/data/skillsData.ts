@@ -4,7 +4,7 @@ export interface TaskStatement {
   statement: string;
 }
 
-// High School Level - 40 Skills with Task Statements (EXAMPLE, could potentially store here, but compared to backend!)
+// High School Level - 40 Skills with Task Statements
 export const highSchool40Skills: TaskStatement[] = [
   { ElementId: "2.C.1.a", ElementName: "Administration and Management", statement: "I have organized and led a group project or school club event." },
   { ElementId: "2.A.1.b", ElementName: "Critical Thinking", statement: "I analyzed data for a school project and drew my own conclusions." },

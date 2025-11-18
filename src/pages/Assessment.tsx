@@ -183,11 +183,11 @@ const Assessment = () => {
           onetCode: job.onet_code,
           title: job.title,
           matchScore: 95 - index * 2, // Descending scores from 95
-          medianSalary: 0, // Placeholder - will need backend enhancement
-          growthOutlook: "Data pending", // Placeholder
-          topSkills: [], // Placeholder
+          medianSalary: job.median_salary || 0,
+          growthOutlook: job.growth_outlook || "Data pending",
+          topSkills: [], // Placeholder - future enhancement
           trainingDuration: "Varies by occupation", // Placeholder
-          description: "Occupation details will be added soon." // Placeholder
+          description: "Click to explore education pathways and program details." // Placeholder
         }));
         setOccupations(transformedOccupations);
       } catch (error) {

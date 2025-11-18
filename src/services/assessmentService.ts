@@ -1,11 +1,14 @@
 // src/services/assessmentService.ts
 import apiClient from '@/lib/apiClient';
+import { fallbackOccupations } from '@/data/fallbackOccupations';
 
 // --- Types aligned to FastAPI Pydantic models ---
 
 export interface OccupationLite {
   onet_code: string;
   title: string;
+  median_salary?: number;
+  growth_outlook?: string;
 }
 
 export interface SkillDefinition {
@@ -95,19 +98,75 @@ export function computeRiasecCode(
 
 // --- API functions ---
 
+/**
+ * Generate fallback RIASEC result when backend is unavailable
+ */
+const generateFallbackRiasecResult = (riasecCode: string, limit: number): RiasecResult => {
+  // Get a sample of occupations from fallback data
+  const allOccupations = Object.values(fallbackOccupations);
+  const selectedOccupations = allOccupations.slice(0, Math.min(limit, allOccupations.length));
+  
+  return {
+    riasec_code: riasecCode,
+    occupation_pool: selectedOccupations.map(o => o.onet_code),
+    top10_jobs: selectedOccupations.map(o => ({
+      onet_code: o.onet_code,
+      title: o.title,
+      median_salary: o.median_salary,
+      growth_outlook: o.growth_outlook
+    })),
+    skills_panel: [] // Skills panel would need its own fallback if needed
+  };
+};
+
 export const submitRiasecCode = async (riasecCode: string, limit: number = 10): Promise<RiasecResult> => {
-  const response = await apiClient.post<RiasecResult>('/assessment/riasec', { riasec_code: riasecCode, limit });
-  return response.data;
+  try {
+    const response = await apiClient.post<RiasecResult>('/assessment/riasec', { riasec_code: riasecCode, limit });
+    return response.data;
+  } catch (error) {
+    console.warn('Backend unavailable for RIASEC assessment, using fallback data');
+    return generateFallbackRiasecResult(riasecCode, limit);
+  }
 };
 
 export const submitSkillWeights = async (
   submission: SkillRatingsSubmission,
 ): Promise<SkillWeightsResponse> => {
-  const response = await apiClient.post<SkillWeightsResponse>('/assessment/skills/weights', submission);
-  return response.data;
+  try {
+    const response = await apiClient.post<SkillWeightsResponse>('/assessment/skills/weights', submission);
+    return response.data;
+  } catch (error) {
+    console.warn('Backend unavailable for skill weights, returning empty result');
+    // Return empty but valid response
+    return {
+      riasec_code: submission.riasec_code,
+      weighted_skills: [],
+      category_weights: {}
+    };
+  }
 };
 
 export const getOccupationDetails = async (onetCode: string) => {
-  const response = await apiClient.get(`/occupations/${onetCode}`);
-  return response.data;
+  try {
+    const response = await apiClient.get(`/occupations/${onetCode}`);
+    return response.data;
+  } catch (error) {
+    console.warn(`Backend unavailable for occupation ${onetCode}, using fallback data`);
+    // Return fallback occupation data
+    const fallback = fallbackOccupations[onetCode];
+    if (fallback) {
+      return {
+        onet_code: fallback.onet_code,
+        title: fallback.title,
+        description: fallback.description,
+        median_annual_wage: fallback.median_salary,
+        employment_outlook: fallback.growth_outlook,
+        job_zone: 3, // Default job zone
+        interest_codes: [],
+        interest_scores: {},
+        onet_url: `https://www.onetonline.org/link/summary/${fallback.onet_code}`
+      };
+    }
+    throw error; // Re-throw if no fallback available
+  }
 };

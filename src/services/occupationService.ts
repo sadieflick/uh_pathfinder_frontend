@@ -1,5 +1,6 @@
 // src/services/occupationService.ts
 import apiClient from '@/lib/apiClient';
+import { fallbackOccupations, fallbackPrograms } from '@/data/fallbackOccupations';
 
 // --- Types for Occupation and Program data ---
 
@@ -70,15 +71,22 @@ export const getOccupationWithPrograms = async (
 
 /**
  * Get just the programs associated with an occupation (lightweight).
+ * Falls back to mock data if backend is unavailable.
  * 
  * @param onetCode - The O*NET SOC code
  * @returns Array of programs
  */
 export const getOccupationPrograms = async (onetCode: string): Promise<Program[]> => {
-  const response = await apiClient.get<Program[]>(
-    `/occupations/${onetCode}/programs/summary`
-  );
-  return response.data;
+  try {
+    const response = await apiClient.get<Program[]>(
+      `/occupations/${onetCode}/programs/summary`
+    );
+    return response.data;
+  } catch (error) {
+    console.warn(`Backend unavailable for programs ${onetCode}, using fallback data`);
+    // Return fallback programs if available, otherwise empty array
+    return fallbackPrograms[onetCode] || [];
+  }
 };
 
 /**
