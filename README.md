@@ -49,9 +49,9 @@ Rather than asking users to self-rate 40 abstract skills (causing fatigue), we u
    - Progressive presentation (can answer more tasks to refine results)
 
 3. **Intelligent Skill Mapping**:
-   - Each task statement maps to 2-3 of the 40 CareerOneStop skills
+   - Each task statement maps to the 40 CareerOneStop skills
    - Backend uses task selections to adjust baseline skill scores
-   - Selecting a task upgrades related skills to "mid-level competency" (anchor at 3 of 5)
+   - Selecting a task upgrades related skills from "mid-level competency" (anchor at 3 of 5)
 
 4. **Skills Summary Review**:
    - Shows which tasks you've completed
@@ -68,7 +68,8 @@ Rather than asking users to self-rate 40 abstract skills (causing fatigue), we u
 
 2. **Open-Ended Input**:
    - 300-500 character narrative text box
-   - Example prompts guide users (STAR format encouraged)
+   - MVP - Long form entry - gives one-shot refinement
+   - Full-feature: Example prompts guide users (STAR format encouraged)
    - Optional step (can skip to see results immediately)
 
 3. **LLM Enhancement** (Planned):
