@@ -16,36 +16,12 @@ export const ProgramCard = ({ program, compact = false }: ProgramCardProps) => {
 
   if (compact) {
     return (
-      <Card className="hover:shadow-md transition-shadow">
-        <CardHeader className="pb-3">
-          <div className="flex items-start justify-between gap-2">
-            <CardTitle className="text-base line-clamp-2">{program.name}</CardTitle>
-            <Badge variant="secondary" className="shrink-0">
-              {program.degree_type}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <div className="flex items-center gap-1">
-              <Clock className="h-4 w-4" />
-              <span>{duration}</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <DollarSign className="h-4 w-4" />
-              <span>${totalCost.toLocaleString()}</span>
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            className="w-full"
-            asChild
-          >
-            <a href={program.program_url} target="_blank" rel="noopener noreferrer">
-              View Program <ExternalLink className="ml-2 h-3 w-3" />
-            </a>
-          </Button>
+      <Card 
+        className="hover:shadow-md transition-all cursor-pointer hover:border-primary/50"
+        onClick={() => window.open(program.program_url, '_blank', 'noopener,noreferrer')}
+      >
+        <CardContent className="p-3">
+          <h4 className="text-sm font-medium leading-tight line-clamp-2">{program.name}</h4>
         </CardContent>
       </Card>
     );

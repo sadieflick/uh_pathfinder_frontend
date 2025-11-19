@@ -26,6 +26,18 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [expandedSections, setExpandedSections] = useState({
+    certificates: false,
+    associates: false,
+    bachelors: false
+  });
+
+  const toggleSection = (section: 'certificates' | 'associates' | 'bachelors') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
 
   useEffect(() => {
     const fetchPrograms = async () => {
@@ -158,9 +170,19 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {grouped.certificates.map((program) => (
+                    {grouped.certificates.slice(0, expandedSections.certificates ? undefined : 3).map((program) => (
                       <ProgramCard key={program.id} program={program} compact={true} />
                     ))}
+                    {grouped.certificates.length > 3 && (
+                      <button
+                        onClick={() => toggleSection('certificates')}
+                        className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
+                      >
+                        {expandedSections.certificates 
+                          ? 'Show less' 
+                          : `+${grouped.certificates.length - 3} more programs`}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -187,13 +209,18 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {grouped.associates.slice(0, 3).map((program) => (
+                    {grouped.associates.slice(0, expandedSections.associates ? undefined : 3).map((program) => (
                       <ProgramCard key={program.id} program={program} compact={true} />
                     ))}
                     {grouped.associates.length > 3 && (
-                      <p className="text-xs text-center text-muted-foreground pt-2">
-                        +{grouped.associates.length - 3} more programs
-                      </p>
+                      <button
+                        onClick={() => toggleSection('associates')}
+                        className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
+                      >
+                        {expandedSections.associates 
+                          ? 'Show less' 
+                          : `+${grouped.associates.length - 3} more programs`}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -221,13 +248,18 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                     </div>
                   </div>
                   <div className="space-y-3">
-                    {grouped.bachelors.slice(0, 3).map((program) => (
+                    {grouped.bachelors.slice(0, expandedSections.bachelors ? undefined : 3).map((program) => (
                       <ProgramCard key={program.id} program={program} compact={true} />
                     ))}
                     {grouped.bachelors.length > 3 && (
-                      <p className="text-xs text-center text-muted-foreground pt-2">
-                        +{grouped.bachelors.length - 3} more programs
-                      </p>
+                      <button
+                        onClick={() => toggleSection('bachelors')}
+                        className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
+                      >
+                        {expandedSections.bachelors 
+                          ? 'Show less' 
+                          : `+${grouped.bachelors.length - 3} more programs`}
+                      </button>
                     )}
                   </div>
                 </div>
@@ -269,9 +301,19 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                 </div>
               </div>
               <div className="space-y-2">
-                {grouped.certificates.map((program) => (
+                {grouped.certificates.slice(0, expandedSections.certificates ? undefined : 3).map((program) => (
                   <ProgramCard key={program.id} program={program} compact={true} />
                 ))}
+                {grouped.certificates.length > 3 && (
+                  <button
+                    onClick={() => toggleSection('certificates')}
+                    className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
+                  >
+                    {expandedSections.certificates 
+                      ? 'Show less' 
+                      : `+${grouped.certificates.length - 3} more programs`}
+                  </button>
+                )}
               </div>
             </div>
             <div className="flex justify-center">
@@ -293,9 +335,19 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                 </div>
               </div>
               <div className="space-y-2">
-                {grouped.associates.map((program) => (
+                {grouped.associates.slice(0, expandedSections.associates ? undefined : 3).map((program) => (
                   <ProgramCard key={program.id} program={program} compact={true} />
                 ))}
+                {grouped.associates.length > 3 && (
+                  <button
+                    onClick={() => toggleSection('associates')}
+                    className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
+                  >
+                    {expandedSections.associates 
+                      ? 'Show less' 
+                      : `+${grouped.associates.length - 3} more programs`}
+                  </button>
+                )}
               </div>
             </div>
             {grouped.bachelors.length > 0 && (
@@ -319,9 +371,19 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                 </div>
               </div>
               <div className="space-y-2">
-                {grouped.bachelors.map((program) => (
+                {grouped.bachelors.slice(0, expandedSections.bachelors ? undefined : 3).map((program) => (
                   <ProgramCard key={program.id} program={program} compact={true} />
                 ))}
+                {grouped.bachelors.length > 3 && (
+                  <button
+                    onClick={() => toggleSection('bachelors')}
+                    className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
+                  >
+                    {expandedSections.bachelors 
+                      ? 'Show less' 
+                      : `+${grouped.bachelors.length - 3} more programs`}
+                  </button>
+                )}
               </div>
             </div>
             <div className="flex justify-center">
