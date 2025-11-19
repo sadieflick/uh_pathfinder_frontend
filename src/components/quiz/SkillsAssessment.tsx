@@ -21,12 +21,12 @@ interface SkillsAssessmentProps {
   onClear?: () => void;
 }
 
-const SkillsAssessment = ({ 
-  studentType, 
-  onComplete, 
-  initialSelections = {}, 
+const SkillsAssessment = ({
+  studentType,
+  onComplete,
+  initialSelections = {},
   shownStatementIds = [],
-  onClear 
+  onClear
 }: SkillsAssessmentProps) => {
   const [selections, setSelections] = useState<Record<string, boolean>>(initialSelections);
   const [visibleCount, setVisibleCount] = useState(12);
@@ -51,21 +51,21 @@ const SkillsAssessment = ({
 
   // Get all available statements for this student type
   const allStatements = getTaskStatements(studentType);
-  
+
   // Track which unseen statements to show
   const unseenStatements = allStatements.filter(
     (s) => !shownStatementIds.includes(s.ElementId)
   );
-  
+
   // Build currentTasks maintaining original order:
   // Show first N unseen statements OR already selected statements
   const unseenCount = Math.min(visibleCount, unseenStatements.length);
   const unseenIds = new Set(unseenStatements.slice(0, unseenCount).map(s => s.ElementId));
-  
-  const currentTasks = allStatements.filter((s) => 
+
+  const currentTasks = allStatements.filter((s) =>
     selections[s.ElementId] || unseenIds.has(s.ElementId)
   );
-  
+
   const hasMoreToShow = unseenCount < unseenStatements.length;
 
   const handleToggle = (elementId: string) => {
@@ -122,11 +122,10 @@ const SkillsAssessment = ({
                 variant={isSelected ? "default" : "outline"}
                 size="lg"
                 onClick={() => handleToggle(task.ElementId)}
-                className={`text-sm md:text-base py-4 px-4 h-auto whitespace-normal text-left transition-all ${
-                  isSelected
+                className={`text-sm md:text-base py-4 px-4 h-auto whitespace-normal text-left transition-all ${isSelected
                     ? "bg-uh-green hover:bg-uh-green/90 text-uh-green-foreground border-uh-green"
                     : "hover:bg-muted"
-                }`}
+                  }`}
               >
                 {task.statement}
               </Button>
@@ -135,12 +134,13 @@ const SkillsAssessment = ({
         </div>
 
         {/* Navigation */}
-        <div className="flex justify-between items-center gap-4">
+
+        <div className="flex justify-between">
+          <div className="flex gap-2">
           {onClear && (
             <Button
               variant="outline"
               onClick={onClear}
-              size="lg"
             >
               Clear All
             </Button>
@@ -149,17 +149,14 @@ const SkillsAssessment = ({
             <Button
               variant="outline"
               onClick={handleAddMore}
-              size="lg"
-              className={!onClear ? "" : "ml-auto"}
             >
               Add More
             </Button>
           )}
+          </div>
           <Button
             onClick={handleNext}
-            disabled={!canProceed}
-            size="lg"
-            className="bg-primary hover:bg-primary/90 group ml-auto"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground group"
           >
             Continue
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />

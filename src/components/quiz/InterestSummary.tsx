@@ -40,9 +40,9 @@ const InterestSummary = ({ answers, questions, onEdit, onContinue, onClear }: In
     <div className="max-w-4xl mx-auto animate-fade-in">
       <Card className="shadow-lg">
         <CardHeader className="bg-gradient-to-r from-uh-green to-uh-green/80 text-white">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
             <CardTitle className="text-3xl">Your Interest Assessment Summary</CardTitle>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button
                 variant="outline"
                 onClick={onEdit}
@@ -85,8 +85,8 @@ const InterestSummary = ({ answers, questions, onEdit, onContinue, onClear }: In
           </div>
 
           <div className="flex justify-end">
-            <Button onClick={onContinue} size="lg" className="bg-primary hover:bg-primary/90">
-              Continue to Results
+            <Button onClick={onContinue} className="bg-primary hover:bg-primary/90">
+              Continue
             </Button>
           </div>
         </CardContent>

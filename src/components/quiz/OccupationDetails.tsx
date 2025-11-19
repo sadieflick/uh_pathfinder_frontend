@@ -27,7 +27,7 @@ interface OccupationDetailsProps {
   onBack: () => void;
 }
 
-// Mock Hawaii was used for testing
+// Mock Hawaii used for testing and fall-back (deployment DB needs fixing, but it works locally!)
 const mockHawaiiPrograms = {
   training: [
     {

@@ -1,6 +1,7 @@
 // src/services/occupationService.ts
 import apiClient from '@/lib/apiClient';
 import { fallbackOccupations, fallbackPrograms } from '@/data/fallbackOccupations';
+import { fixProgramEncoding, fixOccupationEncoding } from '@/utils/text';
 
 // --- Types for Occupation and Program data ---
 
@@ -47,8 +48,28 @@ export interface OccupationWithPrograms {
  * @returns Occupation details
  */
 export const getOccupation = async (onetCode: string): Promise<Occupation> => {
+  try {
+    console.log(`🔍 [API] Fetching occupation: ${onetCode}`);
   const response = await apiClient.get<Occupation>(`/occupations/${onetCode}`);
-  return response.data;
+  console.log(`✅ [API] Successfully fetched occupation from backend:`, response.data.title);
+  return fixOccupationEncoding(response.data);
+  } catch (error) {
+    console.warn(`⚠️ [FALLBACK] Backend unavailable for occupation ${onetCode}, using fallback data`);
+    const fallback = fallbackOccupations[onetCode];
+    if (!fallback) {
+      throw new Error(`Occupation ${onetCode} not found in fallback data`);
+    }
+    // Convert FallbackOccupation to full Occupation type
+    return fixOccupationEncoding({
+      ...fallback,
+      median_annual_wage: fallback.median_salary,
+      employment_outlook: fallback.growth_outlook,
+      job_zone: 3, // Default
+      interest_codes: [],
+      interest_scores: {},
+      onet_url: `https://www.onetonline.org/link/summary/${onetCode}`
+    });
+  }
 };
 
 /**
@@ -63,10 +84,41 @@ export const getOccupation = async (onetCode: string): Promise<Occupation> => {
 export const getOccupationWithPrograms = async (
   onetCode: string
 ): Promise<OccupationWithPrograms> => {
-  const response = await apiClient.get<OccupationWithPrograms>(
-    `/occupations/${onetCode}/programs`
-  );
-  return response.data;
+  try {
+    console.log(`🔍 [API] Fetching occupation with programs: ${onetCode}`);
+    const response = await apiClient.get<OccupationWithPrograms>(
+      `/occupations/${onetCode}/programs`
+    );
+    console.log(`✅ [API] Successfully fetched ${response.data.program_count} programs from backend`);
+    return {
+      ...response.data,
+      occupation: fixOccupationEncoding(response.data.occupation),
+      programs: response.data.programs.map(p => fixProgramEncoding(p))
+    };
+  } catch (error) {
+    console.warn(`⚠️ [FALLBACK] Backend unavailable for occupation programs ${onetCode}, using fallback data`);
+    const fallbackOcc = fallbackOccupations[onetCode];
+    if (!fallbackOcc) {
+      throw new Error(`Occupation ${onetCode} not found in fallback data`);
+    }
+    
+    const occupation: Occupation = {
+      ...fallbackOcc,
+      median_annual_wage: fallbackOcc.median_salary,
+      employment_outlook: fallbackOcc.growth_outlook,
+      job_zone: 3,
+      interest_codes: [],
+      interest_scores: {},
+      onet_url: `https://www.onetonline.org/link/summary/${onetCode}`
+    };
+    
+    const programs = (fallbackPrograms[onetCode] || []).map(p => fixProgramEncoding(p));
+    return {
+      occupation: fixOccupationEncoding(occupation),
+      programs,
+      program_count: programs.length
+    };
+  }
 };
 
 /**
@@ -81,11 +133,11 @@ export const getOccupationPrograms = async (onetCode: string): Promise<Program[]
     const response = await apiClient.get<Program[]>(
       `/occupations/${onetCode}/programs/summary`
     );
-    return response.data;
+    return response.data.map(p => fixProgramEncoding(p));
   } catch (error) {
     console.warn(`Backend unavailable for programs ${onetCode}, using fallback data`);
     // Return fallback programs if available, otherwise empty array
-    return fallbackPrograms[onetCode] || [];
+    return (fallbackPrograms[onetCode] || []).map(p => fixProgramEncoding(p));
   }
 };
 

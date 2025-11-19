@@ -254,29 +254,26 @@ const RIASECResults = ({ riasecScores, onContinue, onBack, onClear }: RIASECResu
         </Card>
 
         {/* Continue Button */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between">
           <div className="flex gap-2">
             <Button 
               onClick={onBack}
               variant="outline"
-              size="lg"
             >
-              Back to Summary
+              Back
             </Button>
             <Button 
               onClick={onClear}
               variant="outline"
-              size="lg"
             >
               Clear All
             </Button>
           </div>
           <Button 
             onClick={onContinue}
-            size="lg"
-            className="bg-primary hover:bg-primary/90 text-primary-foreground group"
+            // className="bg-primary hover:bg-primary/90 text-primary-foreground group"
           >
-            Continue to Skills Assessment
+            Continue
             <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>

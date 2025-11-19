@@ -64,27 +64,17 @@ const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, on
   // Desktop/tablet positions - 20 results in 3 orbits (6 + 7 + 7)
   const desktopPositions = generateOrbitPositions();
 
-  // Mobile positions - 8 results in 2 orbits (4 inner + 4 outer)
+  // Mobile positions - 8 results in 1 orbit
   const generateMobilePositions = () => {
     const positions = [];
     
-    // Inner orbit - 4 positions
-    for (let i = 0; i < 4; i++) {
-      const angle = (i * 90) - 90; // 90° apart
+    // Single orbit - 8 positions evenly distributed
+    for (let i = 0; i < 8; i++) {
+      const angle = (i * 45) - 90; // 45° apart (360/8)
       const radians = (angle * Math.PI) / 180;
       positions.push({
-        x: Math.round((50 + 28 * Math.cos(radians)) * 10) / 10,
-        y: Math.round((50 + 28 * Math.sin(radians)) * 10) / 10
-      });
-    }
-    
-    // Outer orbit - 4 positions, offset by 45° for stagger
-    for (let i = 0; i < 4; i++) {
-      const angle = (i * 90) + 45 - 90; // Offset by 45°
-      const radians = (angle * Math.PI) / 180;
-      positions.push({
-        x: Math.round((50 + 38 * Math.cos(radians)) * 10) / 10,
-        y: Math.round((50 + 38 * Math.sin(radians)) * 10) / 10
+        x: Math.round((50 + 35 * Math.cos(radians)) * 10) / 10,
+        y: Math.round((50 + 35 * Math.sin(radians)) * 10) / 10
       });
     }
     

@@ -121,10 +121,12 @@ const generateFallbackRiasecResult = (riasecCode: string, limit: number): Riasec
 
 export const submitRiasecCode = async (riasecCode: string, limit: number = 10): Promise<RiasecResult> => {
   try {
+    console.log(`🔍 [API] Submitting RIASEC code: ${riasecCode} with limit: ${limit}`);
     const response = await apiClient.post<RiasecResult>('/assessment/riasec', { riasec_code: riasecCode, limit });
+    console.log(`✅ [API] Successfully received ${response.data.top10_jobs.length} matched occupations from backend`);
     return response.data;
   } catch (error) {
-    console.warn('Backend unavailable for RIASEC assessment, using fallback data');
+    console.warn(`⚠️ [FALLBACK] Backend unavailable for RIASEC assessment, using fallback data for code: ${riasecCode}`);
     return generateFallbackRiasecResult(riasecCode, limit);
   }
 };

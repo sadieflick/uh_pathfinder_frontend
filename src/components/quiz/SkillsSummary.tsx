@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 interface SkillsSummaryProps {
   selections: Record<string, boolean>;
@@ -34,11 +35,11 @@ const SkillsSummary = ({
       <Card className="p-8 shadow-lg bg-gradient-to-br from-background to-uh-green/5">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
             <h1 className="text-3xl font-bold bg-gradient-to-r from-uh-green to-primary bg-clip-text text-transparent">
               Your Skills Summary
             </h1>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <Button variant="outline" onClick={onEdit} size="sm">
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Answers
@@ -72,16 +73,18 @@ const SkillsSummary = ({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-between items-center">
-          <Button onClick={onAnswerMore} variant="outline" size="lg">
-            Add More
-          </Button>
+        <div className="flex justify-between">
+          <div className="flex gap-2">
+            <Button onClick={onAnswerMore} variant="outline">
+              Add More
+            </Button>
+          </div>
           <Button
             onClick={onContinue}
-            size="lg"
-            className="bg-primary hover:bg-primary/90"
+            className="bg-primary hover:bg-primary/90 text-primary-foreground group"
           >
-            Continue to Career Matches
+            Continue
+            <ChevronRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
       </Card>
