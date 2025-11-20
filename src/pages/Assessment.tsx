@@ -477,10 +477,11 @@ const Assessment = () => {
           />
         )}
         
-        {stage === "skills-summary" && studentType && (
+        {stage === "skills-summary" && studentType && riasecScores && (
           <SkillsSummary
             selections={skillSelections}
             taskStatements={getTaskStatements(studentType)}
+            riasecScores={riasecScores}
             onEdit={handleSkillsSummaryEdit}
             onContinue={handleSkillsSummaryContinue}
             onAnswerMore={handleSkillsSummaryAnswerMore}
