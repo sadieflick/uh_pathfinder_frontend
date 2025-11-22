@@ -15,21 +15,31 @@ interface OccupationResultsProps {
 
 const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, onBackToInterests }: OccupationResultsProps) => {
   // Pagination state (2 pages max, 25 per page)
-  const PAGE_SIZE = 25;
-  const totalPages = Math.ceil(occupations.length / PAGE_SIZE);
+  // Responsive page size and pagination
+  const DESKTOP_PAGE_SIZE = 25;
+  const MOBILE_PAGE_SIZE = 10;
   const [page, setPage] = useState(0);
 
-  // Generate positions for up to 25 items using 3 rings (7 + 9 + 9)
-  const generatePositions = (count: number) => {
+  // Detect mobile (tailwind md breakpoint)
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const pageSize = isMobile ? MOBILE_PAGE_SIZE : DESKTOP_PAGE_SIZE;
+  const maxMobilePages = 3;
+  const totalPages = isMobile
+    ? Math.min(maxMobilePages, Math.ceil(occupations.length / MOBILE_PAGE_SIZE))
+    : Math.ceil(occupations.length / DESKTOP_PAGE_SIZE);
+
+  // Slice occupations for current page
+  const currentSlice = occupations.slice(page * pageSize, (page + 1) * pageSize);
+
+  // Desktop positions: 3 rings (7+9+9)
+  const generateDesktopPositions = (count: number) => {
     const positions: { x: number; y: number }[] = [];
     let remaining = count;
-
     const ringConfigs = [
       { cap: 7, radius: 22, offsetFactor: 0 },
       { cap: 9, radius: 34, offsetFactor: 0.5 },
       { cap: 9, radius: 46, offsetFactor: 0.33 },
     ];
-
     for (let r = 0; r < ringConfigs.length && remaining > 0; r++) {
       const { cap, radius, offsetFactor } = ringConfigs[r];
       const useCount = Math.min(cap, remaining);
@@ -46,34 +56,53 @@ const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, on
     }
     return positions;
   };
+  const desktopPositions = generateDesktopPositions(currentSlice.length);
 
-  const currentSlice = occupations.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const desktopPositions = generatePositions(currentSlice.length);
-
-  // Mobile: single ring if <=10 else two rings
+  // Mobile positions: scattered grid with edge bias & collision avoidance
+  const MOBILE_CENTER_EXCLUSION = 18; // radius to keep clear
+  const MOBILE_MIN_DIST = 8; // minimum distance between points
   const generateMobilePositions = (count: number) => {
-    const pos: { x: number; y: number }[] = [];
-    if (count <= 10) {
-      for (let i = 0; i < count; i++) {
-        const angle = (i * 360 / count) - 90;
-        const rad = (angle * Math.PI)/180;
-        pos.push({ x: Math.round((50 + 38 * Math.cos(rad))*10)/10, y: Math.round((50 + 38 * Math.sin(rad))*10)/10 });
+    // Start with edge-biased candidate points (x,y as percentages)
+    const candidates: { x: number; y: number }[] = [
+      { x: 12, y: 14 }, { x: 28, y: 10 }, { x: 74, y: 12 }, { x: 88, y: 22 },
+      { x: 10, y: 46 }, { x: 24, y: 78 }, { x: 50, y: 86 }, { x: 72, y: 72 },
+      { x: 90, y: 54 }, { x: 58, y: 30 }, { x: 40, y: 66 }, { x: 22, y: 60 }
+    ];
+    const accepted: { x: number; y: number }[] = [];
+    for (const p of candidates) {
+      if (accepted.length >= count) break;
+      const dxc = p.x - 50; const dyc = p.y - 50;
+      const distCenter = Math.sqrt(dxc*dxc + dyc*dyc);
+      if (distCenter <= MOBILE_CENTER_EXCLUSION) continue;
+      // collision check
+      let collides = false;
+      for (const a of accepted) {
+        const dx = p.x - a.x; const dy = p.y - a.y;
+        if (Math.sqrt(dx*dx + dy*dy) < MOBILE_MIN_DIST) { collides = true; break; }
       }
-    } else {
-      const inner = Math.min(8, count);
-      const outer = count - inner;
-      for (let i=0;i<inner;i++) {
-        const angle = (i * 360 / inner) - 90;
-        const rad = (angle * Math.PI)/180;
-        pos.push({ x: Math.round((50 + 30 * Math.cos(rad))*10)/10, y: Math.round((50 + 30 * Math.sin(rad))*10)/10 });
-      }
-      for (let i=0;i<outer;i++) {
-        const angle = (i * 360 / outer) - 90 + (360/(outer*2));
-        const rad = (angle * Math.PI)/180;
-        pos.push({ x: Math.round((50 + 42 * Math.cos(rad))*10)/10, y: Math.round((50 + 42 * Math.sin(rad))*10)/10 });
+      if (!collides) {
+        accepted.push(p);
+      } else {
+        // attempt outward nudge once
+        const vx = (p.x - 50); const vy = (p.y - 50);
+        const mag = Math.sqrt(vx*vx + vy*vy) || 1;
+        const nudged = {
+          x: Math.min(95, Math.max(5, p.x + (vx/mag)*6)),
+          y: Math.min(90, Math.max(5, p.y + (vy/mag)*6)),
+        };
+        // re-check center + collisions
+        const ndxc = nudged.x - 50; const ndyc = nudged.y - 50;
+        if (Math.sqrt(ndxc*ndxc + ndyc*ndyc) > MOBILE_CENTER_EXCLUSION) {
+          let collides2 = false;
+          for (const a of accepted) {
+            const dx2 = nudged.x - a.x; const dy2 = nudged.y - a.y;
+            if (Math.sqrt(dx2*dx2 + dy2*dy2) < MOBILE_MIN_DIST) { collides2 = true; break; }
+          }
+          if (!collides2) accepted.push(nudged);
+        }
       }
     }
-    return pos;
+    return accepted.slice(0, count);
   };
   const mobilePositions = generateMobilePositions(currentSlice.length);
 
@@ -143,8 +172,8 @@ const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, on
             {/* Career Dots - Desktop (paginated orbital view) */}
             <div className="hidden md:block">
               {orbitOccupations.map((occupation, index) => {
-              const pos = desktopPositions[index] || { x: 50, y: 50 };
-              const color = getColor(index);
+                const pos = desktopPositions[index] || { x: 50, y: 50 };
+                const color = getColor(index);
 
               return (
                 <HoverCard key={occupation.onetCode} openDelay={200}>
@@ -270,7 +299,7 @@ const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, on
             })}
           </div>
 
-          {/* Career Dots - Mobile (paginated orbital view) */}
+          {/* Career Dots - Mobile (paginated orbital view, max 10 per page, 3 pages) */}
           <div className="md:hidden">
             {orbitOccupations.map((occupation, index) => {
               const pos = mobilePositions[index] || { x: 50, y: 50 };
@@ -294,56 +323,23 @@ const OccupationResults = ({ occupations, onOccupationSelect, onBackToSkills, on
                         className="absolute inset-0 rounded-full blur-xl opacity-40 group-hover:opacity-70 transition-opacity"
                         style={{ backgroundColor: color }}
                       />
-                      
                       {/* Dot */}
                       <div
                         className="relative w-3 h-3 rounded-full transition-transform group-hover:scale-150"
                         style={{ backgroundColor: color }}
                       />
-                      
-                      {/* Label - always visible */}
+                      {/* Label - mobile: only job title */}
                       <div className="absolute top-5 left-1/2 -translate-x-1/2 whitespace-nowrap">
                         <div className="flex flex-col items-center gap-1">
                           <p className="text-[10px] font-medium text-foreground bg-background/95 px-2 py-1 rounded-md shadow-lg border border-border">
                             {occupation.title}
                           </p>
                           {occupation.compositeScore && (
-                            <span className="text-[9px] font-bold text-uh-green bg-uh-green/10 px-1.5 py-0.5 rounded-full border border-uh-green/30">
+                            <span className="text-[9px] font-semibold text-uh-green bg-uh-green/10 px-1.5 py-0.5 rounded-full border border-uh-green/30">
                               {Math.round(occupation.compositeScore * 100)}%
                             </span>
                           )}
                         </div>
-                      
-                                            {/* Match Score & Interest Metadata */}
-                                            {(occupation.compositeScore || occupation.interestSum) && (
-                                              <div className="flex items-center gap-3 text-sm border-t pt-2">
-                                                {occupation.compositeScore && (
-                                                  <div className="flex items-center gap-1">
-                                                    <Target className="w-4 h-4 text-uh-green" />
-                                                    <span className="font-semibold text-uh-green">
-                                                      {Math.round(occupation.compositeScore * 100)}% match
-                                                    </span>
-                                                  </div>
-                                                )}
-                                                {occupation.interestSum && (
-                                                  <div className="flex items-center gap-1 text-muted-foreground">
-                                                    <span className="text-xs">
-                                                      Interest: {occupation.interestSum.toFixed(1)} ({occupation.interestsCount || 0} areas)
-                                                    </span>
-                                                  </div>
-                                                )}
-                                              </div>
-                                            )}
-                      
-                                            {/* SKA Rank if available */}
-                                            {occupation.skaRank && (
-                                              <div className="flex items-center gap-1 text-sm">
-                                                <Award className="w-4 h-4 text-accent" />
-                                                <span className="text-xs text-muted-foreground">
-                                                  Skills Rank: #{occupation.skaRank}
-                                                </span>
-                                              </div>
-                                            )}
                       </div>
                     </button>
                   </HoverCardTrigger>

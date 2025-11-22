@@ -4,12 +4,12 @@ import { RIASECScores } from "@/pages/Assessment";
 import { RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, ResponsiveContainer } from "recharts";
 import { ChevronRight, ExternalLink } from "lucide-react";
 import { useState } from "react";
-import realisticImg from "@/assets/riasec-realistic.jpg";
-import investigativeImg from "@/assets/riasec-investigative.jpg";
-import artisticImg from "@/assets/riasec-artistic.jpg";
-import socialImg from "@/assets/riasec-social.jpg";
-import enterprisingImg from "@/assets/riasec-enterprising.jpg";
-import conventionalImg from "@/assets/riasec-conventional.jpg";
+import realisticImg from "@/assets/riasec-realistic.png";
+import investigativeImg from "@/assets/riasec-investigative.png";
+import artisticImg from "@/assets/riasec-artistic.png";
+import socialImg from "@/assets/riasec-social.png";
+import enterprisingImg from "@/assets/riasec-enterprising.png";
+import conventionalImg from "@/assets/riasec-conventional.png";
 
 interface RIASECResultsProps {
   riasecScores: RIASECScores;
