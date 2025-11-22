@@ -7,6 +7,7 @@ type ChatWidgetProps = {
   placeholder?: string;
   system?: string;
   initialMessages?: Message[];
+  model?: string;
 };
 
 export default function ChatWidget({
@@ -14,6 +15,7 @@ export default function ChatWidget({
   placeholder = 'Ask about local pathways…',
   system,
   initialMessages = [],
+  model = 'gpt-4o-mini',
 }: ChatWidgetProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState('');
@@ -37,7 +39,7 @@ export default function ChatWidget({
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ messages: nextMessages, system }),
+        body: JSON.stringify({ messages: nextMessages, system, model }),
       });
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();

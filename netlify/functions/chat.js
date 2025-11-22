@@ -1,14 +1,14 @@
-// Netlify Function: LLM chat proxy (Anthropic)
-// Requires env var: ANTHROPIC_API_KEY
+// Netlify Function: LLM chat proxy (OpenAI)
+// Requires env var: OPENAI_API_KEY
 
 export async function handler(event) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
-    return { statusCode: 500, body: 'Missing ANTHROPIC_API_KEY' };
+    return { statusCode: 500, body: 'Missing OPENAI_API_KEY' };
   }
 
   try {
@@ -17,28 +17,31 @@ export async function handler(event) {
     const messages = Array.isArray(body.messages) ? body.messages : [];
     const system = body.system || 'You are a concise, helpful UH Pathfinder assistant. Focus on Hawaiʻi programs and clear next steps.';
 
-    const anthropicMessages = [];
-    if (userText) {
-      anthropicMessages.push({ role: 'user', content: userText });
+    // Build OpenAI messages array. Include system prompt first.
+    const openAiMessages = [];
+    if (system) {
+      openAiMessages.push({ role: 'system', content: system });
     }
     for (const m of messages) {
       if (!m || !m.role || !m.content) continue;
-      anthropicMessages.push({ role: m.role, content: m.content });
+      openAiMessages.push({ role: m.role, content: m.content });
+    }
+    if (userText) {
+      openAiMessages.push({ role: 'user', content: userText });
     }
 
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+    const model = body.model || 'gpt-4o-mini';
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01'
+        'authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: body.model || 'claude-3-5-haiku-latest',
-        max_tokens: body.max_tokens || 512,
+        model,
+        messages: openAiMessages,
         temperature: body.temperature ?? 0.2,
-        system,
-        messages: anthropicMessages,
+        max_tokens: body.max_tokens || 512,
       }),
     });
 
@@ -48,12 +51,12 @@ export async function handler(event) {
     }
 
     const data = await resp.json();
-    const content = Array.isArray(data.content) && data.content[0]?.type === 'text' ? data.content[0].text : '';
+    const content = data.choices?.[0]?.message?.content || '';
 
     return {
       statusCode: 200,
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ reply: content, raw: data }),
+      body: JSON.stringify({ reply: content, modelUsed: model, raw: data }),
     };
   } catch (e) {
     return { statusCode: 500, body: `Error: ${e.message}` };
