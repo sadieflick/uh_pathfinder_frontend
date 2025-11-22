@@ -39,6 +39,12 @@ export interface OccupationWithPrograms {
   program_count: number;
 }
 
+export interface SkillScore {
+  element_id: string;
+  element_name: string;
+  score: number;
+}
+
 // --- API Functions ---
 
 /**
@@ -138,6 +144,21 @@ export const getOccupationPrograms = async (onetCode: string): Promise<Program[]
     console.warn(`Backend unavailable for programs ${onetCode}, using fallback data`);
     // Return fallback programs if available, otherwise empty array
     return (fallbackPrograms[onetCode] || []).map(p => fixProgramEncoding(p));
+  }
+};
+
+/**
+ * Get top skills (Importance scale) for an occupation.
+ * @param onetCode O*NET SOC code
+ * @param limit optional limit (default 12)
+ */
+export const getOccupationTopSkills = async (onetCode: string, limit: number = 5): Promise<SkillScore[]> => {
+  try {
+    const response = await apiClient.get<SkillScore[]>(`/occupations/${onetCode}/top-skills`, { params: { limit } });
+    return response.data;
+  } catch (error) {
+    console.warn(`⚠️ Backend unavailable for top skills ${onetCode}; returning empty list`);
+    return [];
   }
 };
 

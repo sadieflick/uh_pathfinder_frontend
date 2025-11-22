@@ -2,6 +2,8 @@ import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import { RIASECScores } from "@/pages/Assessment";
 import { computeRiasecCode, submitRiasecCode } from "@/services/assessmentService";
 
@@ -62,6 +64,8 @@ const getBackgroundForRating = (rating: number, isSelected: boolean) => {
 const RIASECQuiz = ({ onComplete, initialAnswers = {}, onClear }: RIASECQuizProps) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [answers, setAnswers] = useState<Record<number, number>>(initialAnswers);
+  const [includeSka, setIncludeSka] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     sessionStorage.setItem("riasec-answers", JSON.stringify(answers));
@@ -81,20 +85,24 @@ const RIASECQuiz = ({ onComplete, initialAnswers = {}, onClear }: RIASECQuizProp
     } else {
       // Compute 3-letter code and send to backend for baseline results
       try {
+          setIsSubmitting(true);
         const code = computeRiasecCode(answers, questions as any);
         // Persist answers for back/forward navigation
         sessionStorage.setItem("riasec-code", code);
         // Fire-and-forget to hydrate downstream results screens
         // Request more occupations to enrich the jobs map (e.g., 20 instead of 10)
-        submitRiasecCode(code, 20)
+        submitRiasecCode(code, 50, includeSka)
           .then((result) => {
             sessionStorage.setItem("riasec-result", JSON.stringify(result));
+                      setIsSubmitting(false);
           })
           .catch((err) => {
             console.error("RISEAC submit failed", err);
+                      setIsSubmitting(false);
           });
       } catch (e) {
         console.error("Error computing/submitting RIASEC code", e);
+        setIsSubmitting(false);
       }
       onComplete(answers);
     }
@@ -181,6 +189,27 @@ const RIASECQuiz = ({ onComplete, initialAnswers = {}, onClear }: RIASECQuizProp
           })}
         </div>
 
+        {/* SKA Integration Toggle - only show on last page */}
+        {currentPage === totalPages - 1 && (
+          <div className="mb-6 p-4 border border-border/50 rounded-lg bg-muted/30">
+            <div className="flex items-center space-x-3">
+              <Checkbox 
+                id="ska-toggle" 
+                checked={includeSka}
+                onCheckedChange={(checked) => setIncludeSka(checked as boolean)}
+              />
+              <div className="flex-1">
+                <Label htmlFor="ska-toggle" className="text-sm font-medium cursor-pointer">
+                  Enhanced Skills Matching (Experimental)
+                </Label>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Uses advanced skills matching from CareerOneStop API. May take longer to process.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Navigation */}
         <div className="flex justify-between">
           <div className="flex gap-2">
@@ -193,8 +222,12 @@ const RIASECQuiz = ({ onComplete, initialAnswers = {}, onClear }: RIASECQuizProp
               </Button>
             )}
           </div>
-          <Button onClick={handleNext} className="bg-primary hover:bg-primary/90">
-            {currentPage < totalPages - 1 ? "Next" : "Complete"}
+          <Button 
+            onClick={handleNext} 
+            className="bg-primary hover:bg-primary/90"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? "Processing..." : currentPage < totalPages - 1 ? "Next" : "Complete"}
           </Button>
         </div>
       </Card>

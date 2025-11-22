@@ -45,6 +45,10 @@ export interface OccupationMatch {
   topSkills: string[];
   trainingDuration: string;
   description: string;
+  compositeScore?: number;
+  interestSum?: number;
+  interestsCount?: number;
+  skaRank?: number;
 }
 
 const questions = [
@@ -182,12 +186,16 @@ const Assessment = () => {
         const transformedOccupations: OccupationMatch[] = riasecResult.top10_jobs.map((job: any, index: number) => ({
           onetCode: job.onet_code,
           title: job.title,
-          matchScore: 95 - index * 2, // Descending scores from 95
+          matchScore: job.composite_score ? Math.round(job.composite_score * 100) : 95 - index * 2,
           medianSalary: job.median_salary || 0,
           growthOutlook: job.growth_outlook || "Data pending",
           topSkills: [], // Placeholder - future enhancement
           trainingDuration: "Varies by occupation", // Placeholder
-          description: "Click to explore education pathways and program details." // Placeholder
+          description: "Click to explore education pathways and program details.", // Placeholder
+          compositeScore: job.composite_score,
+          interestSum: job.interest_sum,
+          interestsCount: job.interests_count,
+          skaRank: job.ska_rank
         }));
         setOccupations(transformedOccupations);
       } catch (error) {

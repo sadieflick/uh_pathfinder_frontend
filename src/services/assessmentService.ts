@@ -9,6 +9,10 @@ export interface OccupationLite {
   title: string;
   median_salary?: number;
   growth_outlook?: string;
+  composite_score?: number;
+  interest_sum?: number;
+  interests_count?: number;
+  ska_rank?: number;
 }
 
 export interface SkillDefinition {
@@ -31,6 +35,8 @@ export interface RiasecResult {
   occupation_pool: string[];
   top10_jobs: OccupationLite[];
   skills_panel: SkillDefinition[];
+  skill_frequencies?: Record<string, number>;
+  ska_available?: boolean;
 }
 
 export interface SkillRatingsSubmission {
@@ -119,10 +125,18 @@ const generateFallbackRiasecResult = (riasecCode: string, limit: number): Riasec
   };
 };
 
-export const submitRiasecCode = async (riasecCode: string, limit: number = 10): Promise<RiasecResult> => {
+export const submitRiasecCode = async (
+  riasecCode: string, 
+  limit: number = 50,
+  includeSka: boolean = false
+): Promise<RiasecResult> => {
   try {
-    console.log(`🔍 [API] Submitting RIASEC code: ${riasecCode} with limit: ${limit}`);
-    const response = await apiClient.post<RiasecResult>('/assessment/riasec', { riasec_code: riasecCode, limit });
+    console.log(`🔍 [API] Submitting RIASEC code: ${riasecCode} with limit: ${limit}, include_ska: ${includeSka}`);
+    const response = await apiClient.post<RiasecResult>('/assessment/riasec', { 
+      riasec_code: riasecCode, 
+      limit,
+      include_ska: includeSka
+    });
     console.log(`✅ [API] Successfully received ${response.data.top10_jobs.length} matched occupations from backend`);
     return response.data;
   } catch (error) {

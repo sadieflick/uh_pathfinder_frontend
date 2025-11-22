@@ -1,3 +1,4 @@
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,13 +8,14 @@ import {
   HoverCardTrigger,
 } from "@/components/ui/hover-card";
 import { OccupationMatch } from "@/pages/Assessment";
+import { getOccupationTopSkills } from "@/services/occupationService";
 import OccupationPathwayMap from "@/components/OccupationPathwayMap";
-import { 
-  ArrowLeft, 
-  DollarSign, 
-  TrendingUp, 
-  GraduationCap, 
-  MapPin, 
+import {
+  ArrowLeft,
+  DollarSign,
+  TrendingUp,
+  GraduationCap,
+  MapPin,
   ExternalLink,
   School,
   Clock,
@@ -27,7 +29,7 @@ interface OccupationDetailsProps {
   onBack: () => void;
 }
 
-// Mock Hawaii used for testing and fall-back (deployment DB needs fixing, but it works locally!)
+// Mock Hawaii used for testing and fall-back
 const mockHawaiiPrograms = {
   training: [
     {
@@ -166,10 +168,41 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
     }).format(salary);
   };
 
+  const [hasVideo, setHasVideo] = React.useState<boolean>(true);
+  const [resolvedTopSkills, setResolvedTopSkills] = React.useState<string[]>(occupation.topSkills || []);
+
+  React.useEffect(() => {
+    const videoUrl = `https://cdn.careeronestop.org/OccVids/OccupationVideos/${occupation.onetCode}.mp4`;
+    setHasVideo(true); // reset for new occupation
+    fetch(videoUrl, { method: 'HEAD' })
+      .then((res) => {
+        if (!res.ok) setHasVideo(false);
+      })
+      .catch(() => setHasVideo(false));
+  }, [occupation.onetCode]);
+
+  // Fetch top skills if not already provided
+  React.useEffect(() => {
+    let active = true;
+    if (!occupation.topSkills || occupation.topSkills.length === 0) {
+      getOccupationTopSkills(occupation.onetCode, 5).then((skills) => {
+        if (!active) return;
+        const names = skills.map(s => s.element_name);
+        setResolvedTopSkills(names);
+      }).catch(() => {
+        if (!active) return;
+        setResolvedTopSkills([]);
+      });
+    } else {
+      setResolvedTopSkills(occupation.topSkills);
+    }
+    return () => { active = false; };
+  }, [occupation.onetCode, occupation.topSkills]);
+
   const ProgramCard = ({ program, color }: { program: any; color: string }) => (
     <HoverCard>
       <HoverCardTrigger asChild>
-        <div 
+        <div
           className={`
             p-4 rounded-lg cursor-pointer transition-all duration-300
             hover:scale-105 hover:shadow-xl border-2
@@ -189,7 +222,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
             </h4>
             <p className="text-sm text-muted-foreground">{program.description}</p>
           </div>
-          
+
           <div className="grid grid-cols-2 gap-3">
             <div className="flex items-start gap-2">
               <Clock className="w-4 h-4 text-accent mt-0.5" />
@@ -198,7 +231,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                 <p className="text-sm font-semibold">{program.duration}</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-2">
               <BookOpen className="w-4 h-4 text-accent mt-0.5" />
               <div>
@@ -206,7 +239,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                 <p className="text-sm font-semibold">{program.credits}</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-2">
               <DollarSign className="w-4 h-4 text-accent mt-0.5" />
               <div>
@@ -214,7 +247,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                 <p className="text-sm font-semibold">{program.estimatedTotalCost}</p>
               </div>
             </div>
-            
+
             <div className="flex items-start gap-2">
               <MapPin className="w-4 h-4 text-accent mt-0.5" />
               <div>
@@ -232,7 +265,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
             ))}
           </div>
 
-          <Button 
+          <Button
             className="w-full"
             onClick={() => window.open(program.programUrl, '_blank')}
           >
@@ -247,8 +280,8 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
   return (
     <div className="w-full animate-fade-in pb-12">
       <div className="max-w-7xl mx-auto px-4">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={onBack}
           className="mb-6 hover:bg-secondary"
         >
@@ -258,59 +291,167 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
 
         {/* Occupation Header */}
         <Card className="p-6 md:p-8 mb-8 bg-gradient-to-r from-primary/5 via-accent/5 to-secondary/5 border border-border/50">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-3">{occupation.title}</h1>
-          <p className="text-base text-muted-foreground mb-6">{occupation.description}</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-uh-green/20 rounded-lg">
-                <DollarSign className="w-6 h-6 text-uh-green" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Median Salary</p>
-                <p className="text-xl font-bold text-foreground">{formatSalary(occupation.medianSalary)}</p>
+          {/* Mobile Title/Description */}
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-3 md:hidden">{occupation.title}</h1>
+          <p className="text-base text-muted-foreground mb-4 md:hidden">{occupation.description}</p>
+
+          {/* Desktop: Title/Description + Video inline */}
+          <div className="hidden md:flex gap-8 items-start">
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold text-foreground mb-2">{occupation.title}</h1>
+              <p className="text-base text-muted-foreground mb-4 max-w-2xl">{occupation.description}</p>
+              <div className="grid grid-cols-2 gap-6 max-w-xl">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-uh-green/20 rounded-lg">
+                    <DollarSign className="w-6 h-6 text-uh-green" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Median Salary</p>
+                    <p className="text-xl font-bold text-foreground">{formatSalary(occupation.medianSalary)}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-primary/20 rounded-lg">
+                    <GraduationCap className="w-6 h-6 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Education</p>
+                    <p className="text-lg font-semibold text-foreground">{occupation.trainingDuration}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-accent/20 rounded-lg">
+                    <TrendingUp className="w-6 h-6 text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Job Outlook</p>
+                    <p className="text-lg font-semibold text-foreground">{occupation.growthOutlook}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="p-2 bg-uh-gold/20 rounded-lg">
+                    <MapPin className="w-6 h-6 text-uh-gold" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Location</p>
+                    <p className="text-lg font-semibold text-foreground">Hawaiʻi</p>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-accent/20 rounded-lg">
-                <TrendingUp className="w-6 h-6 text-accent" />
+            {hasVideo && (
+              <div className="shrink-0 self-stretch flex items-start">
+                <video
+                  src={`https://cdn.careeronestop.org/OccVids/OccupationVideos/${occupation.onetCode}.mp4`}
+                  poster={`https://cdn.careeronestop.org/OccVids/OccupationVideos/${occupation.onetCode}.jpg`}
+                  className="h-full w-auto max-w-md rounded-lg shadow-sm object-cover"
+                  playsInline
+                  controls
+                  title={`${occupation.title} Career Video`}
+                >
+                  <track
+                    src={`https://cdn.careeronestop.org/CaptionFiles/${occupation.onetCode}.vtt`}
+                    label="English"
+                    kind="subtitles"
+                    srcLang="en"
+                    default
+                  />
+                  <track
+                    src={`https://cdn.careeronestop.org/CaptionFiles/${occupation.onetCode}_es.vtt`}
+                    label="Español"
+                    kind="subtitles"
+                    lang="es"
+                  />
+                </video>
               </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Job Outlook</p>
-                <p className="text-lg font-semibold text-foreground">{occupation.growthOutlook}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-primary/20 rounded-lg">
-                <GraduationCap className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Education</p>
-                <p className="text-lg font-semibold text-foreground">{occupation.trainingDuration}</p>
-              </div>
-            </div>
-            
-            <div className="flex items-start gap-3">
-              <div className="p-2 bg-uh-gold/20 rounded-lg">
-                <MapPin className="w-6 h-6 text-uh-gold" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Location</p>
-                <p className="text-lg font-semibold text-foreground">Hawaiʻi</p>
-              </div>
-            </div>
+            )}
           </div>
+
+          {/* Mobile: Stack everything vertically */}
+          <div className="md:hidden space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-uh-green/20 rounded-lg">
+                  <DollarSign className="w-5 h-5 text-uh-green" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Median Salary</p>
+                  <p className="text-lg font-bold text-foreground">{formatSalary(occupation.medianSalary)}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-accent/20 rounded-lg">
+                  <TrendingUp className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Job Outlook</p>
+                  <p className="text-sm font-semibold text-foreground">{occupation.growthOutlook}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <GraduationCap className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Education</p>
+                  <p className="text-sm font-semibold text-foreground">{occupation.trainingDuration}</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="p-2 bg-uh-gold/20 rounded-lg">
+                  <MapPin className="w-5 h-5 text-uh-gold" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Location</p>
+                  <p className="text-sm font-semibold text-foreground">Hawaiʻi</p>
+                </div>
+              </div>
+            </div>
+
+            {hasVideo && (
+              <div className="w-full">
+                <video
+                  src={`https://cdn.careeronestop.org/OccVids/OccupationVideos/${occupation.onetCode}.mp4`}
+                  poster={`https://cdn.careeronestop.org/OccVids/OccupationVideos/${occupation.onetCode}.jpg`}
+                  className="w-full rounded-lg"
+                  playsInline
+                  controls
+                  title={`${occupation.title} Career Video`}
+                >
+                  <track
+                    src={`https://cdn.careeronestop.org/CaptionFiles/${occupation.onetCode}.vtt`}
+                    label="English"
+                    kind="subtitles"
+                    srcLang="en"
+                    default
+                  />
+                  <track
+                    src={`https://cdn.careeronestop.org/CaptionFiles/${occupation.onetCode}_es.vtt`}
+                    label="Español"
+                    kind="subtitles"
+                    lang="es"
+                  />
+                </video>
+              </div>
+            )}
+          </div>
+
 
           <div className="mt-6">
             <p className="text-sm font-medium text-foreground mb-3">Key Skills Required:</p>
             <div className="flex flex-wrap gap-2">
-              {occupation.topSkills.map((skill) => (
-                <Badge key={skill} className="bg-primary/10 text-primary border-primary/20">
-                  {skill}
-                </Badge>
-              ))}
+              {resolvedTopSkills.length > 0 ? (
+                resolvedTopSkills.map((skill) => (
+                  <Badge key={skill} className="bg-primary/10 text-primary border-primary/20">
+                    {skill}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-xs text-muted-foreground">Skill data not available.</span>
+              )}
             </div>
           </div>
         </Card>
@@ -327,7 +468,7 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
             </p>
           </div>
 
-          <OccupationPathwayMap 
+          <OccupationPathwayMap
             onetCode={occupation.onetCode}
             occupationTitle={occupation.title}
           />
@@ -377,9 +518,9 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                   </div>
                   <div className="space-y-2">
                     {mockHawaiiPrograms.training.map((program) => (
-                      <ProgramCard 
-                        key={program.id} 
-                        program={program} 
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
                         color="bg-gradient-to-br from-destructive/30 to-destructive/10 border-destructive/40 hover:border-destructive"
                       />
                     ))}
@@ -405,9 +546,9 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                   </div>
                   <div className="space-y-2">
                     {mockHawaiiPrograms.communityCollege.map((program) => (
-                      <ProgramCard 
-                        key={program.id} 
-                        program={program} 
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
                         color="bg-gradient-to-br from-uh-green/30 to-uh-green/10 border-uh-green/40 hover:border-uh-green"
                       />
                     ))}
@@ -433,9 +574,9 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                   </div>
                   <div className="space-y-2">
                     {mockHawaiiPrograms.university.map((program) => (
-                      <ProgramCard 
-                        key={program.id} 
-                        program={program} 
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
                         color="bg-gradient-to-br from-accent/30 to-accent/10 border-accent/40 hover:border-accent"
                       />
                     ))}
@@ -445,16 +586,22 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
 
               {/* Final: Career */}
               <div className="relative flex-shrink-0 w-48 lg:w-56">
-                <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg p-4 lg:p-6 border-2 border-primary/30 h-full flex flex-col items-center justify-center">
-                  <div className="bg-primary/20 p-3 rounded-full mb-3">
+
+                <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg p-4 lg:p-6 border-2 border-primary/30 h-full flex flex-col items-center justify-center hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
+                  <div className="bg-primary/20 p-3 rounded-full mb-3 group-hover:bg-primary/30 transition-colors">
                     <Briefcase className="w-8 h-8 lg:w-10 lg:h-10 text-primary" />
                   </div>
                   <h3 className="font-bold text-base lg:text-lg text-center mb-2">Career</h3>
                   <p className="text-xs lg:text-sm text-center text-muted-foreground mb-2">{occupation.title}</p>
-                  <Badge className="bg-uh-green/20 text-uh-green border-uh-green/40 text-xs">
+                  <Badge className="bg-uh-green/20 text-uh-green border-uh-green/40 text-xs mb-2">
                     {formatSalary(occupation.medianSalary)}
                   </Badge>
+                  <div className="flex items-center gap-1 text-xs text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <span>View Details</span>
+                    <ExternalLink className="w-3 h-3" />
+                  </div>
                 </div>
+
               </div>
             </div>
 
@@ -474,9 +621,9 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                   </div>
                   <div className="space-y-2">
                     {mockHawaiiPrograms.training.map((program) => (
-                      <ProgramCard 
-                        key={program.id} 
-                        program={program} 
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
                         color="bg-gradient-to-br from-destructive/30 to-destructive/10 border-destructive/40 hover:border-destructive"
                       />
                     ))}
@@ -503,9 +650,9 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                   </div>
                   <div className="space-y-2">
                     {mockHawaiiPrograms.communityCollege.map((program) => (
-                      <ProgramCard 
-                        key={program.id} 
-                        program={program} 
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
                         color="bg-gradient-to-br from-uh-green/30 to-uh-green/10 border-uh-green/40 hover:border-uh-green"
                       />
                     ))}
@@ -532,9 +679,9 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
                   </div>
                   <div className="space-y-2">
                     {mockHawaiiPrograms.university.map((program) => (
-                      <ProgramCard 
-                        key={program.id} 
-                        program={program} 
+                      <ProgramCard
+                        key={program.id}
+                        program={program}
                         color="bg-gradient-to-br from-accent/30 to-accent/10 border-accent/40 hover:border-accent"
                       />
                     ))}
@@ -549,23 +696,34 @@ const OccupationDetails = ({ occupation, onBack }: OccupationDetailsProps) => {
 
               {/* Final: Career */}
               <div className="w-full max-w-sm">
-                <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg p-6 border-2 border-primary/30 flex flex-col items-center justify-center">
-                  <div className="bg-primary/20 p-3 rounded-full mb-3">
-                    <Briefcase className="w-10 h-10 text-primary" />
+                <a
+                  href={`https://www.careeronestop.org/Videos/careeronestop-videos.aspx?videocode=${occupation.onetCode.replace(/\D/g, '')}&ts=${Date.now()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg p-6 border-2 border-primary/30 flex flex-col items-center justify-center hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer group">
+                    <div className="bg-primary/20 p-3 rounded-full mb-3 group-hover:bg-primary/30 transition-colors">
+                      <Briefcase className="w-10 h-10 text-primary" />
+                    </div>
+                    <h3 className="font-bold text-lg text-center mb-2">Career</h3>
+                    <p className="text-sm text-center text-muted-foreground mb-3">{occupation.title}</p>
+                    <Badge className="bg-uh-green/20 text-uh-green border-uh-green/40 mb-2">
+                      {formatSalary(occupation.medianSalary)}
+                    </Badge>
+                    <div className="flex items-center gap-1 text-xs text-primary mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <span>View on CareerOneStop</span>
+                      <ExternalLink className="w-3 h-3" />
+                    </div>
                   </div>
-                  <h3 className="font-bold text-lg text-center mb-2">Career</h3>
-                  <p className="text-sm text-center text-muted-foreground mb-3">{occupation.title}</p>
-                  <Badge className="bg-uh-green/20 text-uh-green border-uh-green/40">
-                    {formatSalary(occupation.medianSalary)}
-                  </Badge>
-                </div>
+                </a>
               </div>
             </div>
           </div>
           {/* End of hidden legacy section */}
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 

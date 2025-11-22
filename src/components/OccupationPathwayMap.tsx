@@ -7,6 +7,7 @@ import { ProgramCard } from "@/components/ProgramCard";
 import { getOccupationPrograms } from "@/services/occupationService";
 import { GraduationCap, ArrowRight, Briefcase, AlertCircle } from "lucide-react";
 import type { Program } from "@/services/occupationService";
+import ReactPlayer from 'react-player';
 
 interface OccupationPathwayMapProps {
   onetCode: string;
@@ -58,12 +59,16 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
     }
   }, [onetCode]);
 
+  console.log("ONET Code:", onetCode);
+  const onetIdStripped = onetCode.replace(/\D/g, '');
+  console.log("ONET ID Stripped:", onetIdStripped);
+
   // Group programs by degree type
   const groupPrograms = (programs: Program[]): GroupedPrograms => {
     return programs.reduce(
       (acc, program) => {
         const degreeType = program.degree_type?.toLowerCase() || '';
-        
+
         if (degreeType.includes('certificate') || degreeType.includes('competence')) {
           acc.certificates.push(program);
         } else if (degreeType.includes('associate')) {
@@ -74,7 +79,7 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
           // Default to associates if unknown
           acc.associates.push(program);
         }
-        
+
         return acc;
       },
       { certificates: [], associates: [], bachelors: [] } as GroupedPrograms
@@ -178,8 +183,8 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                         onClick={() => toggleSection('certificates')}
                         className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
                       >
-                        {expandedSections.certificates 
-                          ? 'Show less' 
+                        {expandedSections.certificates
+                          ? 'Show less'
                           : `+${grouped.certificates.length - 3} more programs`}
                       </button>
                     )}
@@ -217,8 +222,8 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                         onClick={() => toggleSection('associates')}
                         className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
                       >
-                        {expandedSections.associates 
-                          ? 'Show less' 
+                        {expandedSections.associates
+                          ? 'Show less'
                           : `+${grouped.associates.length - 3} more programs`}
                       </button>
                     )}
@@ -256,8 +261,8 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                         onClick={() => toggleSection('bachelors')}
                         className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
                       >
-                        {expandedSections.bachelors 
-                          ? 'Show less' 
+                        {expandedSections.bachelors
+                          ? 'Show less'
                           : `+${grouped.bachelors.length - 3} more programs`}
                       </button>
                     )}
@@ -272,7 +277,14 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
 
           {/* Career destination */}
           <div className="flex-shrink-0" style={{ width: '180px' }}>
+            {/* <a 
+                  href={`https://www.careeronestop.org/Videos/careeronestop-videos.aspx?videocode=${onetIdStripped}&ts=${Date.now()}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block h-full"
+                > */}
             <div className="bg-gradient-to-br from-primary/20 to-primary/10 rounded-lg p-4 border-2 border-primary/30 h-full flex flex-col items-center justify-center text-center">
+              
               <div className="bg-primary/20 p-3 rounded-full mb-3">
                 <Briefcase className="w-8 h-8 text-primary" />
               </div>
@@ -282,6 +294,7 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                 Your Goal
               </Badge>
             </div>
+            {/* </a> */}
           </div>
         </div>
       </div>
@@ -309,8 +322,8 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                     onClick={() => toggleSection('certificates')}
                     className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
                   >
-                    {expandedSections.certificates 
-                      ? 'Show less' 
+                    {expandedSections.certificates
+                      ? 'Show less'
                       : `+${grouped.certificates.length - 3} more programs`}
                   </button>
                 )}
@@ -343,8 +356,8 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                     onClick={() => toggleSection('associates')}
                     className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
                   >
-                    {expandedSections.associates 
-                      ? 'Show less' 
+                    {expandedSections.associates
+                      ? 'Show less'
                       : `+${grouped.associates.length - 3} more programs`}
                   </button>
                 )}
@@ -379,8 +392,8 @@ const OccupationPathwayMap: React.FC<OccupationPathwayMapProps> = ({
                     onClick={() => toggleSection('bachelors')}
                     className="text-xs text-center text-primary hover:text-primary/80 pt-2 w-full cursor-pointer font-medium"
                   >
-                    {expandedSections.bachelors 
-                      ? 'Show less' 
+                    {expandedSections.bachelors
+                      ? 'Show less'
                       : `+${grouped.bachelors.length - 3} more programs`}
                   </button>
                 )}
