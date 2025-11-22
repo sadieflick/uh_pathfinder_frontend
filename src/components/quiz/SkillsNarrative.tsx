@@ -3,7 +3,8 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SkillRating } from "@/pages/Assessment";
-import { ChevronRight, Lightbulb } from "lucide-react";
+import { ChevronRight, Lightbulb, MessageSquare } from "lucide-react";
+import ChatWidget from "@/components/llm/ChatWidget";
 
 interface SkillsNarrativeProps {
   topSkills: SkillRating[];
@@ -74,6 +75,31 @@ const SkillsNarrative = ({ topSkills, onComplete }: SkillsNarrativeProps) => {
               {narrative.length} / 500
             </p>
           </div>
+        </div>
+
+        {/* Demo: Skills Refinement Chat */}
+        <div className="mb-8">
+          <div className="flex items-center gap-2 mb-3">
+            <MessageSquare className="w-5 h-5 text-primary" />
+            <h3 className="text-xl font-semibold text-foreground">Demo: Skills Refinement Chat</h3>
+          </div>
+          <p className="text-sm text-muted-foreground mb-3">
+            Try a quick conversation to refine your matches. This demo summarizes your strengths and suggests UH-aligned next steps.
+          </p>
+          <ChatWidget
+            title="Pathfinder Skills Coach (Demo)"
+            placeholder="E.g., I enjoyed building a robot for class."
+            system={
+              `You are a concise UH Pathfinder skills refinement demo assistant. ` +
+              `Student's top skills: ${skillNames || 'None provided'}. ` +
+              `If the student shares a narrative, use it to ask 1-2 short follow-ups and then summarize in ≤3 sentences. ` +
+              `End with up to 3 actionable suggestions (e.g., course or program tags within UH) without guaranteeing admissions or outcomes. ` +
+              `Keep responses local to Hawaiʻi when possible; avoid long lists.`
+            }
+            initialMessages={[
+              { role: 'assistant', content: `I can help refine your matches. Based on your strengths in ${skillNames || 'your skills'}, what’s a project or task you’re proud of?` },
+            ]}
+          />
         </div>
 
         <div className="flex justify-between items-center">

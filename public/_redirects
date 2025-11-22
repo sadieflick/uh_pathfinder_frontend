@@ -1,1 +1,4 @@
+# Redirect API to Netlify Functions first
+/api/* /.netlify/functions/:splat 200
+
 /* /index.html 200
