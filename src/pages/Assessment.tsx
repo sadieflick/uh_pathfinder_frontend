@@ -233,7 +233,8 @@ const Assessment = () => {
   const handleSkillsSummaryContinue = () => {
     const ratings = convertSelectionsToRatings(skillSelections);
     setSkillRatings(ratings);
-    setStage("skills-narrative");
+    // Skip narrative page - go straight to occupation results
+    setStage("occupation-results");
   };
 
   const handleNarrativeComplete = (narrative: string) => {
