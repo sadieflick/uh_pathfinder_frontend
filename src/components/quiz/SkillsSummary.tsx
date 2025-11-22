@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Edit, ChevronRight, TrendingUp, AlertTriangle, Lightbulb, Loader2 } from "lucide-react";
 import { RIASECScores } from "@/pages/Assessment";
+import apiClient from "@/lib/apiClient";
 
 interface SkillsSummaryProps {
   selections: Record<string, boolean>;
@@ -74,20 +75,12 @@ const SkillsSummary = ({
         const riasecCode = getRiasecCode();
         const selectedSkillIds = selectedSkills.map(s => s.ElementId);
 
-        const response = await fetch("http://localhost:8000/api/v1/assessment/skills/initialize", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            riasec_code: riasecCode,
-            selected_skill_ids: selectedSkillIds,
-          }),
+        const response = await apiClient.post("/assessment/skills/initialize", {
+          riasec_code: riasecCode,
+          selected_skill_ids: selectedSkillIds,
         });
 
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
+        const data = response.data;
         
         // Calculate insights
         const selected = data.skills.filter((s: PrescoredSkill) => s.selected);
